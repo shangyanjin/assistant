@@ -1,6 +1,7 @@
 """
 File management handler - event handling
 """
+import os
 import tkinter as tk
 from tkinter import messagebox
 from internal.file.service import FileService
@@ -77,36 +78,87 @@ class FileHandler:
         """Handle create directory"""
         if not name:
             return False
-        if self.service.create_directory(name):
-            self.ui.refresh()
-            return True
-        return False
+        try:
+            if self.service.create_directory(name):
+                self.ui.refresh()
+                return True
+            else:
+                messagebox.showerror(
+                    "Error",
+                    f"Failed to create directory '{name}'.\nIt may already exist or you don't have permission.",
+                    parent=self.ui.window
+                )
+                return False
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"Error creating directory: {str(e)}",
+                parent=self.ui.window
+            )
+            return False
 
     def on_delete_item(self, name: str) -> bool:
         """Handle delete item"""
         if not name:
             return False
         
+        # Check if it's a directory or file
+        item_path = os.path.join(self.service.current_path, name)
+        is_dir = os.path.isdir(item_path)
+        item_type = "directory" if is_dir else "file"
+        
         result = messagebox.askyesno(
             "Confirm Delete",
-            f"Are you sure you want to delete '{name}'?\nThis action cannot be undone.",
+            f"Are you sure you want to delete the {item_type} '{name}'?\nThis action cannot be undone.",
             parent=self.ui.window
         )
         
         if result:
-            if self.service.delete_item(name):
-                self.ui.refresh()
-                return True
+            try:
+                if self.service.delete_item(name):
+                    self.ui.refresh()
+                    return True
+                else:
+                    messagebox.showerror(
+                        "Error",
+                        f"Failed to delete '{name}'.\nYou may not have permission or the item is in use.",
+                        parent=self.ui.window
+                    )
+                    return False
+            except Exception as e:
+                messagebox.showerror(
+                    "Error",
+                    f"Error deleting item: {str(e)}",
+                    parent=self.ui.window
+                )
+                return False
         return False
 
     def on_rename_item(self, old_name: str, new_name: str) -> bool:
         """Handle rename item"""
         if not old_name or not new_name:
             return False
-        if self.service.rename_item(old_name, new_name):
-            self.ui.refresh()
-            return True
-        return False
+        if old_name == new_name:
+            return True  # No change needed
+        
+        try:
+            if self.service.rename_item(old_name, new_name):
+                self.ui.refresh()
+                return True
+            else:
+                messagebox.showerror(
+                    "Error",
+                    f"Failed to rename '{old_name}' to '{new_name}'.\nThe new name may already exist or you don't have permission.",
+                    parent=self.ui.window
+                )
+                return False
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"Error renaming item: {str(e)}",
+                parent=self.ui.window
+            )
+            return False
 
     def on_copy_item(self, name: str):
         """Handle copy item"""

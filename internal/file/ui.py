@@ -485,7 +485,20 @@ class FileManagerUI:
             from tkinter.simpledialog import askstring
             name = askstring("New Directory", "Enter directory name:", parent=self.window)
             if name:
-                self.handler.on_create_directory(name)
+                # Validate name
+                if not name.strip():
+                    return
+                # Check for invalid characters
+                invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+                if any(char in name for char in invalid_chars):
+                    from tkinter import messagebox
+                    messagebox.showerror(
+                        "Invalid Name",
+                        f"Directory name cannot contain: {', '.join(invalid_chars)}",
+                        parent=self.window
+                    )
+                    return
+                self.handler.on_create_directory(name.strip())
     
     def _on_copy(self):
         """Handle copy from context menu"""
@@ -512,9 +525,19 @@ class FileManagerUI:
             selected = self.get_selected_item()
             if selected:
                 from tkinter.simpledialog import askstring
-                new_name = askstring("Rename", f"Enter new name for '{selected}':", parent=self.window)
-                if new_name:
-                    self.handler.on_rename_item(selected, new_name)
+                new_name = askstring("Rename", f"Enter new name for '{selected}':", parent=self.window, initialvalue=selected)
+                if new_name and new_name.strip():
+                    # Validate name
+                    invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+                    if any(char in new_name for char in invalid_chars):
+                        from tkinter import messagebox
+                        messagebox.showerror(
+                            "Invalid Name",
+                            f"Name cannot contain: {', '.join(invalid_chars)}",
+                            parent=self.window
+                        )
+                        return
+                    self.handler.on_rename_item(selected, new_name.strip())
     
     def _on_refresh(self):
         """Handle refresh from context menu"""
