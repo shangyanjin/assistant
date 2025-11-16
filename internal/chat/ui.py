@@ -33,9 +33,9 @@ class ChatUI:
 
     def _create_ui(self):
         """Create chat UI components"""
-        # Chat container
+        # Chat container (row 3 after menu, toolbar, header)
         chat_frame = ttk.Frame(self.root)
-        chat_frame.grid(row=2, column=0, sticky="nsew", padx=20)
+        chat_frame.grid(row=3, column=0, sticky="nsew", padx=20)
         chat_frame.grid_columnconfigure(0, weight=1)
         chat_frame.grid_rowconfigure(0, weight=1)
 

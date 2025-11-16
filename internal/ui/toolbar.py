@@ -1,102 +1,110 @@
 """
-Toolbar component with common action buttons
+Toolbar component - Windows file manager style toolbar
 """
 import tkinter as tk
 from tkinter import ttk
 
 
-class ToolbarFrame:
+class Toolbar:
     """Toolbar with common action buttons"""
     
     def __init__(self, parent: tk.Tk):
         """
-        Initialize toolbar frame
+        Initialize toolbar
         
         Args:
             parent: Parent window
         """
         self.parent = parent
-        self.frame = ttk.Frame(parent)
+        self.frame = ttk.Frame(parent, relief=tk.RAISED, borderwidth=1)
         self.buttons = {}
         
         self._create_toolbar()
 
     def _create_toolbar(self):
-        """Create toolbar buttons"""
-        self.frame.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 10))
+        """Create toolbar with buttons"""
+        self.frame.grid(row=1, column=0, sticky="ew", padx=0, pady=0)
+        self.frame.grid_columnconfigure(0, weight=0)
+        
+        # Button style - similar to Windows file manager
+        button_style = {
+            'width': 10,
+            'padding': (5, 2)
+        }
         
         # New Chat button
         self.buttons['new'] = ttk.Button(
-            self.frame, text="New Chat", width=12
+            self.frame,
+            text="New Chat",
+            **button_style
         )
-        self.buttons['new'].grid(row=0, column=0, padx=(0, 5))
-        
-        # Separator
-        ttk.Separator(self.frame, orient="vertical").grid(
-            row=0, column=1, sticky="ns", padx=5, pady=5
-        )
-        
-        # Copy button
-        self.buttons['copy'] = ttk.Button(
-            self.frame, text="Copy", width=10
-        )
-        self.buttons['copy'].grid(row=0, column=2, padx=(5, 5))
-        
-        # Paste button
-        self.buttons['paste'] = ttk.Button(
-            self.frame, text="Paste", width=10
-        )
-        self.buttons['paste'].grid(row=0, column=3, padx=(0, 5))
-        
-        # Separator
-        ttk.Separator(self.frame, orient="vertical").grid(
-            row=0, column=4, sticky="ns", padx=5, pady=5
-        )
+        self.buttons['new'].grid(row=0, column=0, padx=2, pady=2, sticky="w")
         
         # Clear button
         self.buttons['clear'] = ttk.Button(
-            self.frame, text="Clear", width=10
+            self.frame,
+            text="Clear",
+            **button_style
         )
-        self.buttons['clear'].grid(row=0, column=5, padx=(5, 5))
+        self.buttons['clear'].grid(row=0, column=1, padx=2, pady=2, sticky="w")
         
         # Separator
-        ttk.Separator(self.frame, orient="vertical").grid(
-            row=0, column=6, sticky="ns", padx=5, pady=5
-        )
+        separator1 = ttk.Separator(self.frame, orient=tk.VERTICAL)
+        separator1.grid(row=0, column=2, padx=5, pady=2, sticky="ns")
         
         # Settings button
         self.buttons['settings'] = ttk.Button(
-            self.frame, text="⚙️ Settings", width=12
+            self.frame,
+            text="Settings",
+            **button_style
         )
-        self.buttons['settings'].grid(row=0, column=7, padx=(5, 5))
+        self.buttons['settings'].grid(row=0, column=3, padx=2, pady=2, sticky="w")
         
-        # Help button
-        self.buttons['help'] = ttk.Button(
-            self.frame, text="Help", width=10
+        # Model Management button
+        self.buttons['models'] = ttk.Button(
+            self.frame,
+            text="Models",
+            **button_style
         )
-        self.buttons['help'].grid(row=0, column=8, padx=(0, 0))
+        self.buttons['models'].grid(row=0, column=4, padx=2, pady=2, sticky="w")
+        
+        # Separator
+        separator2 = ttk.Separator(self.frame, orient=tk.VERTICAL)
+        separator2.grid(row=0, column=5, padx=5, pady=2, sticky="ns")
+        
+        # Refresh button
+        self.buttons['refresh'] = ttk.Button(
+            self.frame,
+            text="Refresh",
+            **button_style
+        )
+        self.buttons['refresh'].grid(row=0, column=6, padx=2, pady=2, sticky="w")
         
         # Spacer to push buttons to left
-        self.frame.grid_columnconfigure(9, weight=1)
+        spacer = ttk.Frame(self.frame)
+        spacer.grid(row=0, column=7, sticky="ew")
+        self.frame.grid_columnconfigure(7, weight=1)
 
     def set_command(self, button_name: str, command):
         """
         Set command for a button
         
         Args:
-            button_name: Name of the button ('new', 'copy', 'paste', 'clear', 'settings', 'help')
+            button_name: Name of the button ('new', 'clear', 'settings', etc.)
             command: Callback function
         """
         if button_name in self.buttons:
             self.buttons[button_name].config(command=command)
 
-    def set_all_commands(self, commands: dict):
+    def get_button(self, button_name: str) -> ttk.Button:
         """
-        Set commands for multiple buttons at once
+        Get button widget
         
         Args:
-            commands: Dictionary mapping button names to command functions
+            button_name: Name of the button
+            
+        Returns:
+            Button widget or None
         """
-        for button_name, command in commands.items():
-            self.set_command(button_name, command)
+        return self.buttons.get(button_name)
 

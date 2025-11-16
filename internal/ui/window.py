@@ -14,7 +14,7 @@ from internal.chat.handler import ChatHandler
 from internal.chat.ui import ChatUI
 from internal.chat.model_manager import ModelManager
 from internal.ui.components import HeaderFrame, InputFrame, ProgressFrame
-from internal.ui.toolbar import ToolbarFrame
+from internal.ui.toolbar import Toolbar
 from threading import Thread
 
 
@@ -32,9 +32,9 @@ class App:
         self.header: Optional[HeaderFrame] = None
         self.input_frame: Optional[InputFrame] = None
         self.progress_frame: Optional[ProgressFrame] = None
-        self.toolbar: Optional[ToolbarFrame] = None
         self.model_manager: Optional[ModelManager] = None
         self.menubar: Optional[tk.Menu] = None
+        self.toolbar: Optional[Toolbar] = None
 
     def _check_tkinter(self):
         """Check if tkinter is available"""
@@ -59,10 +59,16 @@ class App:
         self.root.geometry(f"800x600+{(screen_width - 800) // 2}+{(screen_height - 600) // 2}")
         
         # Configure grid
+        # Row 0: Menu bar (handled by tkinter)
+        # Row 1: Toolbar
+        # Row 2: Header frame
+        # Row 3: Chat UI
+        # Row 4: Progress frame
+        # Row 5: Input frame
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(2, weight=1)  # Chat area (moved down)
-        self.root.grid_rowconfigure(3, weight=0)  # Progress
-        self.root.grid_rowconfigure(4, weight=0)  # Input
+        self.root.grid_rowconfigure(3, weight=1)  # Chat UI expands
+        self.root.grid_rowconfigure(4, weight=0)  # Progress frame
+        self.root.grid_rowconfigure(5, weight=0)  # Input frame
 
     def _setup_components(self):
         """Setup application components"""
@@ -72,11 +78,11 @@ class App:
         # Model manager
         self.model_manager = ModelManager(self.root, self.api_client)
         
+        # Toolbar (after menu bar)
+        self.toolbar = Toolbar(self.root)
+        
         # Header frame
         self.header = HeaderFrame(self.root, settings_callback=self._show_model_management)
-        
-        # Toolbar frame
-        self.toolbar = ToolbarFrame(self.root)
         
         # Progress frame
         self.progress_frame = ProgressFrame(self.root)
@@ -87,20 +93,20 @@ class App:
         # Chat service
         self.chat_service = ChatService(self.api_client)
         
-        # Chat UI
+        # Chat UI (adjust row for toolbar)
         self.chat_ui = ChatUI(self.root)
         
         # Connect UI components
         self._connect_ui_components()
-        
-        # Setup toolbar commands
-        self._setup_toolbar()
         
         # Chat handler
         self.chat_handler = ChatHandler(self.chat_service, self.chat_ui)
         
         # Create menu bar
         self._create_menu_bar()
+        
+        # Setup toolbar commands
+        self._setup_toolbar()
         
         # Setup event handlers
         self._setup_event_handlers()
@@ -128,6 +134,31 @@ class App:
         # Note: handler needs to be created first, so this is called after handler creation
         pass
     
+    def _setup_toolbar(self):
+        """Setup toolbar button commands"""
+        if not self.toolbar:
+            return
+        
+        # New Chat button
+        self.toolbar.set_command('new', self._new_chat)
+        
+        # Clear button
+        self.toolbar.set_command('clear', self._clear_chat)
+        
+        # Settings button
+        self.toolbar.set_command('settings', self._show_model_management)
+        
+        # Models button
+        self.toolbar.set_command('models', self._show_model_management)
+        
+        # Refresh button
+        self.toolbar.set_command('refresh', self._refresh_models)
+
+    def _new_chat(self):
+        """Start a new chat conversation"""
+        if self.chat_handler:
+            self.chat_handler.on_clear()
+
     def _setup_event_handlers(self):
         """Setup event handlers after handler is created"""
         # User input key binding
@@ -142,41 +173,13 @@ class App:
         if self.progress_frame and self.progress_frame.stop_button and self.chat_handler:
             self.progress_frame.stop_button.config(command=self.chat_handler.on_stop)
         
-        # Refresh button
+        # Refresh button (header)
         if self.header and self.header.refresh_button:
             self.header.refresh_button.config(command=self._refresh_models)
         
         # Host input change
         if self.header and self.header.host_input:
             self.header.host_input.bind("<Return>", lambda e: self._update_host())
-
-    def _setup_toolbar(self):
-        """Setup toolbar button commands"""
-        if not self.toolbar:
-            return
-        
-        commands = {
-            'new': self._new_chat,
-            'copy': self._copy_all,
-            'paste': self._paste_text,
-            'clear': self._clear_chat,
-            'settings': self._show_model_management,
-            'help': self._show_help,
-        }
-        self.toolbar.set_all_commands(commands)
-
-    def _new_chat(self):
-        """Start new chat"""
-        self._clear_chat()
-
-    def _paste_text(self):
-        """Paste text to input"""
-        if self.input_frame and self.input_frame.user_input:
-            try:
-                text = self.root.clipboard_get()
-                self.input_frame.user_input.insert(tk.INSERT, text)
-            except tk.TclError:
-                pass
 
     def _update_host(self):
         """Update API client host"""
