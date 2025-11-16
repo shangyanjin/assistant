@@ -92,7 +92,7 @@ class InputFrame:
 
     def _create_input(self):
         """Create input components"""
-        self.frame.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 20))
+        self.frame.grid(row=4, column=0, sticky="ew", padx=20, pady=(0, 20))
         self.frame.grid_columnconfigure(0, weight=1)
 
         # User input
@@ -142,7 +142,7 @@ class ProgressFrame:
 
     def _create_progress(self):
         """Create progress components"""
-        self.frame.grid(row=2, column=0, sticky="ew", padx=20, pady=10)
+        self.frame.grid(row=3, column=0, sticky="ew", padx=20, pady=10)
 
         # Progress bar
         self.progress = ttk.Progressbar(

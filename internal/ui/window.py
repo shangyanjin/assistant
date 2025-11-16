@@ -14,6 +14,7 @@ from internal.chat.handler import ChatHandler
 from internal.chat.ui import ChatUI
 from internal.chat.model_manager import ModelManager
 from internal.ui.components import HeaderFrame, InputFrame, ProgressFrame
+from internal.ui.toolbar import ToolbarFrame
 from threading import Thread
 
 
@@ -31,6 +32,7 @@ class App:
         self.header: Optional[HeaderFrame] = None
         self.input_frame: Optional[InputFrame] = None
         self.progress_frame: Optional[ProgressFrame] = None
+        self.toolbar: Optional[ToolbarFrame] = None
         self.model_manager: Optional[ModelManager] = None
         self.menubar: Optional[tk.Menu] = None
 
@@ -58,9 +60,9 @@ class App:
         
         # Configure grid
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(1, weight=1)
-        self.root.grid_rowconfigure(2, weight=0)
-        self.root.grid_rowconfigure(3, weight=0)
+        self.root.grid_rowconfigure(2, weight=1)  # Chat area (moved down)
+        self.root.grid_rowconfigure(3, weight=0)  # Progress
+        self.root.grid_rowconfigure(4, weight=0)  # Input
 
     def _setup_components(self):
         """Setup application components"""
@@ -72,6 +74,9 @@ class App:
         
         # Header frame
         self.header = HeaderFrame(self.root, settings_callback=self._show_model_management)
+        
+        # Toolbar frame
+        self.toolbar = ToolbarFrame(self.root)
         
         # Progress frame
         self.progress_frame = ProgressFrame(self.root)
@@ -87,6 +92,9 @@ class App:
         
         # Connect UI components
         self._connect_ui_components()
+        
+        # Setup toolbar commands
+        self._setup_toolbar()
         
         # Chat handler
         self.chat_handler = ChatHandler(self.chat_service, self.chat_ui)
@@ -141,6 +149,34 @@ class App:
         # Host input change
         if self.header and self.header.host_input:
             self.header.host_input.bind("<Return>", lambda e: self._update_host())
+
+    def _setup_toolbar(self):
+        """Setup toolbar button commands"""
+        if not self.toolbar:
+            return
+        
+        commands = {
+            'new': self._new_chat,
+            'copy': self._copy_all,
+            'paste': self._paste_text,
+            'clear': self._clear_chat,
+            'settings': self._show_model_management,
+            'help': self._show_help,
+        }
+        self.toolbar.set_all_commands(commands)
+
+    def _new_chat(self):
+        """Start new chat"""
+        self._clear_chat()
+
+    def _paste_text(self):
+        """Paste text to input"""
+        if self.input_frame and self.input_frame.user_input:
+            try:
+                text = self.root.clipboard_get()
+                self.input_frame.user_input.insert(tk.INSERT, text)
+            except tk.TclError:
+                pass
 
     def _update_host(self):
         """Update API client host"""
