@@ -47,6 +47,10 @@ assistant/
 └── assets/                 # Static resources
 ```
 
+## Changelog
+
+See [CHANGELOG.md](docs/CHANGELOG.md) for a list of changes and version history.
+
 ## License
 
 MIT
