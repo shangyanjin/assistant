@@ -47,6 +47,18 @@ assistant/
 └── assets/                  # Static resources
 ```
 
+## [0.1.1] - 2024-11-17
+
+### Added
+- PyInstaller build configuration (`build.spec`)
+- Build scripts for Windows (`build.bat`) and Linux/Mac (`build.sh`)
+- Build documentation (`docs/BUILD.md`)
+- Executable packaging support
+
+### Changed
+- Updated README with build instructions
+- Updated `.gitignore` to allow `build.spec` in repository
+
 ## [Unreleased]
 
 ### Planned
