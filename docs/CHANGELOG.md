@@ -69,6 +69,9 @@ assistant/
   - Navigation buttons (back, forward, refresh)
   - Search functionality
   - Context menu for file operations
+  - Directory operations: create, delete, rename (with validation)
+  - File operations: create, delete, rename, copy, paste
+  - Error handling and user feedback for all operations
 - Independent chat window (Toplevel)
 - Toolbar with icon-based buttons
 
@@ -76,11 +79,14 @@ assistant/
 - Main window defaults to file manager
 - Chat window is now independent (Toplevel)
 - Toolbar button order: File Manager first, Chat second
+- Updated README with file management features and correct screenshot paths
 
 ### Fixed
 - Directory tree subdirectory display with lazy loading
 - Directory tree expansion and navigation
 - File manager UI layout issues
+- Input validation for directory and file names
+- Error messages for file operations
 
 ### Planned
 - System monitoring features
