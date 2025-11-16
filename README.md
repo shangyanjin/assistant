@@ -4,31 +4,32 @@ Multi-functional assistant application with file management and chat capabilitie
 
 ## Features
 
-- Chat with AI models via Ollama
+- **Chat with AI models via Ollama**
   - Streaming response support
   - Model management (download/delete)
   - Chat history
-- File management (planned)
+  - Independent chat window
+- **File Management**
+  - Left-right layout with directory tree
+  - File and directory operations (create, delete, rename, copy, paste)
+  - Navigation (back, forward, refresh)
+  - Search functionality
+  - Context menu for file operations
 - System monitoring (planned)
 
 ## Screenshots
 
-### Main Window
-![Main Window](screenshots/main.png)
+### Main Window - File Manager
+![Main Window](docs/scrennshot/main.png)
 
-*Main application window with chat interface*
+*Main application window with file manager interface (left: directory tree, right: file list)*
 
-### Model Management
-![Model Management](screenshots/model-management.png)
-
-*Model management window for downloading and deleting AI models*
-
-### Chat Interface
+### Chat Window
 ![Chat Interface](docs/scrennshot/chat.png)
 
-*Chat interface with streaming AI responses*
+*Independent chat window with streaming AI responses*
 
-> **Note:** Screenshots should be placed in the `screenshots/` directory. Add your own screenshots to showcase the application.
+> **Note:** Screenshots are located in `docs/scrennshot/` directory. The main window shows the file manager by default, and chat opens in a separate window.
 
 ## Requirements
 
