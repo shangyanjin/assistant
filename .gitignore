@@ -23,7 +23,8 @@ wheels/
 
 # PyInstaller
 *.manifest
-*.spec
+# build.spec should be committed (it's a configuration file)
+# *.spec
 
 # Virtual environments
 venv/
