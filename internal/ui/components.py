@@ -28,8 +28,8 @@ class HeaderFrame:
 
     def _create_header(self):
         """Create header components"""
-        # Header frame at row 2 (after menu and toolbar)
-        self.frame.grid(row=2, column=0, sticky="ew", padx=20, pady=20)
+        # Header frame at row 0 (in chat window)
+        self.frame.grid(row=0, column=0, sticky="ew", padx=20, pady=20)
         self.frame.grid_columnconfigure(4, weight=1)
 
         # Model selection
@@ -93,8 +93,8 @@ class InputFrame:
 
     def _create_input(self):
         """Create input components"""
-        # Input frame at row 5 (after menu, toolbar, header, chat, progress)
-        self.frame.grid(row=5, column=0, sticky="ew", padx=20, pady=(0, 20))
+        # Input frame at row 3 (after header, chat, progress in chat window)
+        self.frame.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 20))
         self.frame.grid_columnconfigure(0, weight=1)
 
         # User input
@@ -144,8 +144,8 @@ class ProgressFrame:
 
     def _create_progress(self):
         """Create progress components"""
-        # Progress frame at row 4 (after menu, toolbar, header, chat)
-        self.frame.grid(row=4, column=0, sticky="ew", padx=20, pady=10)
+        # Progress frame at row 2 (after header and chat in chat window)
+        self.frame.grid(row=2, column=0, sticky="ew", padx=20, pady=10)
 
         # Progress bar
         self.progress = ttk.Progressbar(

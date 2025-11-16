@@ -61,8 +61,28 @@ assistant/
 
 ## [Unreleased]
 
+### Added
+- File management module with left-right layout
+  - Directory tree on the left (lazy loading)
+  - File list on the right with details (Name, Date Modified, Type, Size)
+  - Resizable paned window
+  - Navigation buttons (back, forward, refresh)
+  - Search functionality
+  - Context menu for file operations
+- Independent chat window (Toplevel)
+- Toolbar with icon-based buttons
+
+### Changed
+- Main window defaults to file manager
+- Chat window is now independent (Toplevel)
+- Toolbar button order: File Manager first, Chat second
+
+### Fixed
+- Directory tree subdirectory display with lazy loading
+- Directory tree expansion and navigation
+- File manager UI layout issues
+
 ### Planned
-- File management module
 - System monitoring features
 - Theme customization
 - Configuration persistence

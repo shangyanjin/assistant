@@ -9,11 +9,10 @@ import webbrowser
 from pkg.api.ollama import OllamaClient
 from pkg.utils.system import check_system_compatibility
 from internal.model.config import AppConfig
-from internal.chat.service import ChatService
-from internal.chat.handler import ChatHandler
-from internal.chat.ui import ChatUI
-from internal.chat.model_manager import ModelManager
-from internal.ui.components import HeaderFrame, InputFrame, ProgressFrame
+from internal.file.service import FileService
+from internal.file.ui import FileManagerUI
+from internal.file.handler import FileHandler
+from internal.chat.window import ChatWindow
 from internal.ui.toolbar import Toolbar
 from threading import Thread
 
@@ -26,13 +25,10 @@ class App:
         self.config = AppConfig()
         self.root: Optional[tk.Tk] = None
         self.api_client: Optional[OllamaClient] = None
-        self.chat_service: Optional[ChatService] = None
-        self.chat_ui: Optional[ChatUI] = None
-        self.chat_handler: Optional[ChatHandler] = None
-        self.header: Optional[HeaderFrame] = None
-        self.input_frame: Optional[InputFrame] = None
-        self.progress_frame: Optional[ProgressFrame] = None
-        self.model_manager: Optional[ModelManager] = None
+        self.file_service: Optional[FileService] = None
+        self.file_ui: Optional[FileManagerUI] = None
+        self.file_handler: Optional[FileHandler] = None
+        self.chat_window: Optional[ChatWindow] = None
         self.menubar: Optional[tk.Menu] = None
         self.toolbar: Optional[Toolbar] = None
 
@@ -49,165 +45,79 @@ class App:
             sys.exit(0)
 
     def _create_window(self):
-        """Create main window"""
+        """Create main window - File Manager"""
         self.root = tk.Tk()
-        self.root.title("Assistant")
+        self.root.title("Assistant - File Manager")
         
         # Set window size and position
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        self.root.geometry(f"800x600+{(screen_width - 800) // 2}+{(screen_height - 600) // 2}")
+        self.root.geometry(f"900x600+{(screen_width - 900) // 2}+{(screen_height - 600) // 2}")
         
         # Configure grid
         # Row 0: Menu bar (handled by tkinter)
         # Row 1: Toolbar
-        # Row 2: Header frame
-        # Row 3: Chat UI
-        # Row 4: Progress frame
-        # Row 5: Input frame
+        # Row 2: File Manager header
+        # Row 3: File Manager list
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(3, weight=1)  # Chat UI expands
-        self.root.grid_rowconfigure(4, weight=0)  # Progress frame
-        self.root.grid_rowconfigure(5, weight=0)  # Input frame
+        self.root.grid_rowconfigure(3, weight=1)  # File manager list expands
 
     def _setup_components(self):
         """Setup application components"""
-        # API client
+        # API client (for chat)
         self.api_client = OllamaClient(self.config.api_url)
         
-        # Model manager
-        self.model_manager = ModelManager(self.root, self.api_client)
+        # File service
+        self.file_service = FileService()
+        
+        # File manager UI (in main window)
+        self.file_ui = FileManagerUI(self.root, self.file_service)
+        
+        # File handler
+        self.file_handler = FileHandler(self.file_service, self.file_ui)
         
         # Toolbar (after menu bar)
         self.toolbar = Toolbar(self.root)
-        
-        # Header frame
-        self.header = HeaderFrame(self.root, settings_callback=self._show_model_management)
-        
-        # Progress frame
-        self.progress_frame = ProgressFrame(self.root)
-        
-        # Input frame
-        self.input_frame = InputFrame(self.root)
-        
-        # Chat service
-        self.chat_service = ChatService(self.api_client)
-        
-        # Chat UI (adjust row for toolbar)
-        self.chat_ui = ChatUI(self.root)
-        
-        # Connect UI components
-        self._connect_ui_components()
-        
-        # Chat handler
-        self.chat_handler = ChatHandler(self.chat_service, self.chat_ui)
         
         # Create menu bar
         self._create_menu_bar()
         
         # Setup toolbar commands
         self._setup_toolbar()
-        
-        # Setup event handlers
-        self._setup_event_handlers()
-        
-        # Refresh models
-        self._refresh_models()
 
-    def _connect_ui_components(self):
-        """Connect UI components"""
-        # Connect input frame to chat UI
-        if self.input_frame and self.chat_ui:
-            self.chat_ui.user_input = self.input_frame.user_input
-            self.chat_ui.send_button = self.input_frame.send_button
-        
-        # Connect progress frame to chat UI
-        if self.progress_frame and self.chat_ui:
-            self.chat_ui.set_progress_frame(self.progress_frame)
-        
-        # Connect header to chat UI
-        if self.header and self.chat_ui:
-            self.chat_ui.model_select = self.header.model_select
-
-    def _connect_events(self):
-        """Connect UI events to handlers"""
-        # Note: handler needs to be created first, so this is called after handler creation
-        pass
     
     def _setup_toolbar(self):
         """Setup toolbar button commands"""
         if not self.toolbar:
             return
         
-        # New Chat button
-        self.toolbar.set_command('new', self._new_chat)
+        # New Chat button - opens chat window
+        self.toolbar.set_command('new', self._show_chat)
         
-        # Clear button
-        self.toolbar.set_command('clear', self._clear_chat)
+        # File Manager button - refresh current file manager
+        self.toolbar.set_command('file', self._refresh_file_manager)
         
-        # Settings button
+        # Settings button - show model management
         self.toolbar.set_command('settings', self._show_model_management)
         
-        # Models button
+        # Models button - show model management
         self.toolbar.set_command('models', self._show_model_management)
         
-        # Refresh button
-        self.toolbar.set_command('refresh', self._refresh_models)
-
-    def _new_chat(self):
-        """Start a new chat conversation"""
-        if self.chat_handler:
-            self.chat_handler.on_clear()
-
-    def _setup_event_handlers(self):
-        """Setup event handlers after handler is created"""
-        # User input key binding
-        if self.input_frame and self.input_frame.user_input and self.chat_handler:
-            self.input_frame.user_input.bind("<Key>", self.chat_handler.handle_key_press)
+        # Refresh button - refresh file manager
+        self.toolbar.set_command('refresh', self._refresh_file_manager)
+    
+    def _show_chat(self):
+        """Show chat window"""
+        if not self.api_client:
+            self.api_client = OllamaClient(self.config.api_url)
         
-        # Send button
-        if self.input_frame and self.input_frame.send_button and self.chat_handler:
-            self.input_frame.send_button.config(command=self.chat_handler.on_send)
-        
-        # Stop button
-        if self.progress_frame and self.progress_frame.stop_button and self.chat_handler:
-            self.progress_frame.stop_button.config(command=self.chat_handler.on_stop)
-        
-        # Refresh button (header)
-        if self.header and self.header.refresh_button:
-            self.header.refresh_button.config(command=self._refresh_models)
-        
-        # Host input change
-        if self.header and self.header.host_input:
-            self.header.host_input.bind("<Return>", lambda e: self._update_host())
-
-    def _update_host(self):
-        """Update API client host"""
-        if self.header and self.api_client:
-            new_host = self.header.get_host()
-            self.api_client.api_url = new_host
-            if self.model_manager:
-                self.model_manager.api_client.api_url = new_host
-            self._refresh_models()
-
-    def _refresh_models(self):
-        """Refresh model list"""
-        if not self.header or not self.api_client:
-            return
-        
-        def update_models():
-            try:
-                models = self.api_client.fetch_models()
-                if models:
-                    self.root.after(0, lambda: self.header.set_models(models))
-                    if self.input_frame:
-                        self.root.after(0, lambda: self.input_frame.send_button.state(["!disabled"]))
-                else:
-                    self.root.after(0, lambda: self.header.model_select.set("No models available"))
-            except Exception:
-                self.root.after(0, lambda: self.header.model_select.set("Error! Check host."))
-        
-        Thread(target=update_models, daemon=True).start()
+        # Create or show chat window
+        self.chat_window = ChatWindow(self.root, self.api_client)
+    
+    def _refresh_file_manager(self):
+        """Refresh file manager"""
+        if self.file_ui:
+            self.file_ui.refresh()
 
     def _create_menu_bar(self):
         """Create menu bar"""
@@ -217,15 +127,16 @@ class App:
         # File menu
         file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="New Chat", command=self._show_chat)
+        file_menu.add_separator()
         file_menu.add_command(label="Model Management", command=self._show_model_management)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
 
-        # Edit menu
-        edit_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Edit", menu=edit_menu)
-        edit_menu.add_command(label="Copy All", command=self._copy_all)
-        edit_menu.add_command(label="Clear Chat", command=self._clear_chat)
+        # View menu
+        view_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="View", menu=view_menu)
+        view_menu.add_command(label="Refresh", command=self._refresh_file_manager)
 
         # Help menu
         help_menu = tk.Menu(self.menubar, tearoff=0)
@@ -234,26 +145,12 @@ class App:
 
     def _show_model_management(self):
         """Show model management window"""
-        if self.model_manager:
-            # Update API client host before showing
-            if self.header:
-                self.model_manager.api_client.api_url = self.header.get_host()
-            self.model_manager.show_window()
-
-    def _copy_all(self):
-        """Copy all chat history"""
-        if self.chat_service:
-            import pprint
-            history = self.chat_service.get_history()
-            if history:
-                text = pprint.pformat([msg.to_dict() for msg in history])
-                self.root.clipboard_clear()
-                self.root.clipboard_append(text)
-
-    def _clear_chat(self):
-        """Clear chat"""
-        if self.chat_handler:
-            self.chat_handler.on_clear()
+        if not self.api_client:
+            self.api_client = OllamaClient(self.config.api_url)
+        
+        from internal.chat.model_manager import ModelManager
+        model_manager = ModelManager(self.root, self.api_client)
+        model_manager.show_window()
 
     def _show_help(self):
         """Show help dialog"""
