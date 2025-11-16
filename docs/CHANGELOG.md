@@ -88,6 +88,12 @@ assistant/
 - Input validation for directory and file names
 - Error messages for file operations
 
+### UI Improvements
+- Directory tree selection highlighting (blue background, white text)
+- Consistent selection style between directory tree and file list
+- Custom About dialog with clickable GitHub link
+- Single-click selection for directory tree nodes
+
 ### Planned
 - System monitoring features
 - Theme customization

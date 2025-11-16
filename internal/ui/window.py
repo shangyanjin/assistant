@@ -153,16 +153,81 @@ class App:
         model_manager.show_window()
 
     def _show_help(self):
-        """Show help dialog"""
-        info = (
-            "Project: Assistant\n"
-            "Version: 0.1.0\n"
-            "Multi-functional assistant application\n\n"
-            "Shortcuts:\n"
-            "<Enter>: Send message\n"
-            "<Shift+Enter>: New line\n"
+        """Show help dialog with GitHub link"""
+        # Create a custom dialog window
+        about_window = tk.Toplevel(self.root)
+        about_window.title("About")
+        about_window.transient(self.root)
+        about_window.grab_set()
+        
+        # Center the window
+        screen_width = about_window.winfo_screenwidth()
+        screen_height = about_window.winfo_screenheight()
+        x = (screen_width - 400) // 2
+        y = (screen_height - 300) // 2
+        about_window.geometry(f"400x300+{x}+{y}")
+        
+        # Content frame
+        content_frame = ttk.Frame(about_window, padding=20)
+        content_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Title
+        title_label = ttk.Label(
+            content_frame,
+            text="Assistant",
+            font=("TkDefaultFont", 16, "bold")
         )
-        messagebox.showinfo("About", info, parent=self.root)
+        title_label.pack(pady=(0, 10))
+        
+        # Version
+        version_label = ttk.Label(
+            content_frame,
+            text="Version: 0.1.0"
+        )
+        version_label.pack(pady=(0, 10))
+        
+        # Description
+        desc_label = ttk.Label(
+            content_frame,
+            text="Multi-functional assistant application\nwith file management and chat capabilities",
+            justify=tk.CENTER
+        )
+        desc_label.pack(pady=(0, 20))
+        
+        # GitHub link
+        github_frame = ttk.Frame(content_frame)
+        github_frame.pack(pady=(0, 20))
+        
+        ttk.Label(github_frame, text="GitHub: ").pack(side=tk.LEFT)
+        
+        github_link = tk.Label(
+            github_frame,
+            text="https://github.com/shangyanjin/assistant",
+            fg="blue",
+            cursor="hand2",
+            font=("TkDefaultFont", 9)
+        )
+        github_link.pack(side=tk.LEFT)
+        github_link.bind(
+            "<Button-1>",
+            lambda e: webbrowser.open("https://github.com/shangyanjin/assistant")
+        )
+        
+        # Shortcuts
+        shortcuts_label = ttk.Label(
+            content_frame,
+            text="Shortcuts:\n<Enter>: Send message\n<Shift+Enter>: New line",
+            justify=tk.LEFT
+        )
+        shortcuts_label.pack(pady=(0, 20))
+        
+        # Close button
+        close_button = ttk.Button(
+            content_frame,
+            text="Close",
+            command=about_window.destroy
+        )
+        close_button.pack()
 
     def _check_system(self):
         """Check system compatibility"""

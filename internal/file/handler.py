@@ -75,7 +75,7 @@ class FileHandler:
         return False
 
     def on_create_directory(self, name: str) -> bool:
-        """Handle create directory"""
+        """Handle create directory in current path"""
         if not name:
             return False
         try:
@@ -89,6 +89,38 @@ class FileHandler:
                     parent=self.ui.window
                 )
                 return False
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"Error creating directory: {str(e)}",
+                parent=self.ui.window
+            )
+            return False
+    
+    def on_create_directory_in_path(self, parent_path: str, name: str) -> bool:
+        """Handle create directory in specified path"""
+        if not name or not parent_path:
+            return False
+        try:
+            # Save current path
+            current_path = self.service.current_path
+            # Navigate to parent
+            if self.service.navigate_to(parent_path):
+                # Create directory
+                success = self.service.create_directory(name)
+                # Restore original path
+                self.service.navigate_to(current_path)
+                if success:
+                    self.ui.refresh()
+                    return True
+                else:
+                    messagebox.showerror(
+                        "Error",
+                        f"Failed to create directory '{name}'.\nIt may already exist or you don't have permission.",
+                        parent=self.ui.window
+                    )
+                    return False
+            return False
         except Exception as e:
             messagebox.showerror(
                 "Error",

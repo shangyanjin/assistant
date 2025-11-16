@@ -106,14 +106,24 @@ class FileManagerUI:
         self.dir_tree = ttk.Treeview(
             left_frame,
             show="tree",
-            yscrollcommand=tree_scrollbar.set
+            yscrollcommand=tree_scrollbar.set,
+            selectmode="browse"  # Single selection mode
         )
         self.dir_tree.grid(row=0, column=0, sticky="nsew")
         tree_scrollbar.config(command=self.dir_tree.yview)
         
+        # Configure tree style for better selection visibility (applies to all Treeviews)
+        style = ttk.Style()
+        style.map("Treeview",
+            background=[("selected", "#0078d4")],  # Blue selection background
+            foreground=[("selected", "white")]     # White text on selection
+        )
+        
         # Bind tree events
         self.dir_tree.bind("<<TreeviewSelect>>", self._on_tree_select)
         self.dir_tree.bind("<<TreeviewOpen>>", self._on_tree_expand)
+        self.dir_tree.bind("<Button-3>", self._show_tree_context_menu)
+        self.dir_tree.bind("<Button-1>", self._on_tree_click)  # Single click to select
         
         # Right panel: File list
         right_frame = ttk.Frame(paned)
@@ -160,8 +170,9 @@ class FileManagerUI:
         self.forward_btn = forward_btn
         self.refresh_btn = refresh_btn
         
-        # Create context menu
+        # Create context menus
         self._create_context_menu()
+        self._create_tree_context_menu()
     
     def _clear_search_placeholder(self):
         """Clear search placeholder"""
@@ -215,6 +226,14 @@ class FileManagerUI:
         except (PermissionError, OSError) as e:
             pass
     
+    def _on_tree_click(self, event):
+        """Handle single click on directory tree - ensure selection"""
+        item = self.dir_tree.identify_row(event.y)
+        if item:
+            self.dir_tree.selection_set(item)
+            # Highlight the selected item
+            self.dir_tree.focus(item)
+    
     def _on_tree_select(self, event):
         """Handle directory tree selection"""
         selection = self.dir_tree.selection()
@@ -224,8 +243,8 @@ class FileManagerUI:
             if values and values[0]:
                 dir_path = values[0]
                 if os.path.isdir(dir_path):
-                    if self.handler:
-                        self.handler.on_tree_navigate(dir_path)
+                    # Don't auto-navigate on selection, only on explicit action
+                    pass
     
     def _on_tree_expand(self, event):
         """Handle directory tree expand"""
@@ -436,7 +455,7 @@ class FileManagerUI:
         return None
     
     def _create_context_menu(self):
-        """Create right-click context menu"""
+        """Create right-click context menu for file list"""
         self.context_menu = tk.Menu(self.window, tearoff=0)
         self.context_menu.add_command(label="Open", command=self._on_open)
         self.context_menu.add_separator()
@@ -450,9 +469,23 @@ class FileManagerUI:
         self.context_menu.add_separator()
         self.context_menu.add_command(label="Refresh", command=self._on_refresh)
         
-        # Bind right-click
+        # Bind right-click to file list
         if self.treeview:
             self.treeview.bind("<Button-3>", self._show_context_menu)
+    
+    def _create_tree_context_menu(self):
+        """Create right-click context menu for directory tree"""
+        self.tree_context_menu = tk.Menu(self.window, tearoff=0)
+        self.tree_context_menu.add_command(label="Open", command=self._on_tree_open)
+        self.tree_context_menu.add_separator()
+        self.tree_context_menu.add_command(label="New Directory", command=self._on_tree_new_dir)
+        self.tree_context_menu.add_separator()
+        self.tree_context_menu.add_command(label="Copy", command=self._on_tree_copy)
+        self.tree_context_menu.add_command(label="Paste", command=self._on_tree_paste)
+        self.tree_context_menu.add_command(label="Delete", command=self._on_tree_delete)
+        self.tree_context_menu.add_command(label="Rename", command=self._on_tree_rename)
+        self.tree_context_menu.add_separator()
+        self.tree_context_menu.add_command(label="Refresh", command=self._on_refresh)
     
     def _show_context_menu(self, event):
         """Show context menu on right-click"""
@@ -544,6 +577,121 @@ class FileManagerUI:
         if self.handler:
             self.handler.on_refresh()
     
+    def _show_tree_context_menu(self, event):
+        """Show context menu on right-click for directory tree"""
+        if not self.dir_tree:
+            return
+        item = self.dir_tree.identify_row(event.y)
+        if item:
+            self.dir_tree.selection_set(item)
+        try:
+            self.tree_context_menu.tk_popup(event.x_root, event.y_root)
+        finally:
+            self.tree_context_menu.grab_release()
+    
+    def _on_tree_open(self):
+        """Handle open from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            if selected:
+                self.handler.on_tree_navigate(selected)
+    
+    def _on_tree_new_dir(self):
+        """Handle new directory from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            parent_path = selected if selected else self.service.get_current_path()
+            
+            from tkinter.simpledialog import askstring
+            name = askstring("New Directory", "Enter directory name:", parent=self.window)
+            if name:
+                # Validate name
+                if not name.strip():
+                    return
+                invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+                if any(char in name for char in invalid_chars):
+                    from tkinter import messagebox
+                    messagebox.showerror(
+                        "Invalid Name",
+                        f"Directory name cannot contain: {', '.join(invalid_chars)}",
+                        parent=self.window
+                    )
+                    return
+                
+                # Create directory in selected parent
+                if self.handler.on_create_directory_in_path(parent_path, name.strip()):
+                    self.refresh()
+    
+    def _on_tree_copy(self):
+        """Handle copy from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            if selected:
+                # Get directory name from path
+                dir_name = os.path.basename(selected)
+                # Navigate to parent first
+                parent_path = os.path.dirname(selected)
+                if parent_path and self.service.navigate_to(parent_path):
+                    self.handler.on_copy_item(dir_name)
+    
+    def _on_tree_paste(self):
+        """Handle paste from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            if selected:
+                # Navigate to selected directory first
+                if self.service.navigate_to(selected):
+                    self.handler.on_paste_item()
+    
+    def _on_tree_delete(self):
+        """Handle delete from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            if selected:
+                # Get directory name from path
+                dir_name = os.path.basename(selected)
+                # Navigate to parent first
+                parent_path = os.path.dirname(selected)
+                if parent_path and self.service.navigate_to(parent_path):
+                    self.handler.on_delete_item(dir_name)
+    
+    def _on_tree_rename(self):
+        """Handle rename from tree context menu"""
+        if self.handler:
+            selected = self.get_selected_tree_item()
+            if selected:
+                # Get directory name from path
+                old_name = os.path.basename(selected)
+                # Navigate to parent first
+                parent_path = os.path.dirname(selected)
+                if parent_path and self.service.navigate_to(parent_path):
+                    from tkinter.simpledialog import askstring
+                    new_name = askstring("Rename", f"Enter new name for '{old_name}':", parent=self.window, initialvalue=old_name)
+                    if new_name and new_name.strip():
+                        # Validate name
+                        invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*']
+                        if any(char in new_name for char in invalid_chars):
+                            from tkinter import messagebox
+                            messagebox.showerror(
+                                "Invalid Name",
+                                f"Name cannot contain: {', '.join(invalid_chars)}",
+                                parent=self.window
+                            )
+                            return
+                        self.handler.on_rename_item(old_name, new_name.strip())
+    
+    def get_selected_tree_item(self) -> Optional[str]:
+        """Get selected directory path from tree"""
+        if not self.dir_tree:
+            return None
+        selection = self.dir_tree.selection()
+        if selection:
+            item = self.dir_tree.item(selection[0])
+            values = item.get("values", [])
+            if values and values[0]:
+                return values[0]
+        return None
+
     def set_handler(self, handler):
         """Set handler for events"""
         self.handler = handler
