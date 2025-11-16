@@ -1,3 +1,6 @@
-# No external dependencies required
+# No external dependencies required for runtime
 # Uses only Python standard library (tkinter, urllib, etc.)
+
+# Build dependencies (optional, for packaging)
+# pyinstaller>=5.0.0
 

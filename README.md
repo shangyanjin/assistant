@@ -21,6 +21,8 @@ pip install -e .
 
 ## Usage
 
+### Run from source
+
 ```bash
 python main.py
 ```
@@ -29,6 +31,18 @@ Or if installed:
 
 ```bash
 assistant
+```
+
+### Run executable
+
+After building (see [Building](docs/BUILD.md)):
+
+```bash
+# Windows
+dist/assistant.exe
+
+# Linux/Mac
+./dist/assistant
 ```
 
 ## Project Structure
