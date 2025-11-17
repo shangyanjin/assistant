@@ -1,5 +1,6 @@
-# No external dependencies required for runtime
-# Uses only Python standard library (tkinter, urllib, etc.)
+# Audio processing dependencies
+mutagen>=1.47.0
+chardet>=5.0.0
 
 # Build dependencies (optional, for packaging)
 # pyinstaller>=5.0.0

@@ -74,12 +74,33 @@ assistant/
   - Error handling and user feedback for all operations
 - Independent chat window (Toplevel)
 - Toolbar with icon-based buttons
+- Audio batch processing module
+  - Audio file scanner with recursive directory scanning
+  - Support for multiple audio formats (MP3, FLAC, M4A, AAC, OGG, WMA, WAV, APE, MP4)
+  - Audio tag reader (ID3, Vorbis, MP4 tags)
+  - Audio tag writer (ID3v2.4 UTF-8 encoding)
+  - Encoding detection and conversion (GBK/GB2312 -> UTF-8)
+  - Batch metadata processing with multi-threading support
+  - Progress display with wget/axel style output
+  - Audio processor UI window with options:
+    - Fix encoding issues
+    - Auto-detect album from directory name
+    - Auto-generate title with zero-padding (01, 02, ...)
+    - Update tags (write changes to files)
+    - Format filename (Number + Album Style, remove ads and decorations)
+  - Filename formatting:
+    - Unified format: Number + Album Style
+    - Automatic removal of ads and decorations (----, URLs, @ symbols, etc.)
+    - Smart track number extraction and zero-padding
+    - Album style extraction from tags or directory structure
+  - Audio processor button (🎵) in toolbar
 
 ### Changed
 - Main window defaults to file manager
 - Chat window is now independent (Toplevel)
 - Toolbar button order: File Manager first, Chat second
 - Updated README with file management features and correct screenshot paths
+- Audio processor button moved from file manager header to main toolbar
 
 ### Fixed
 - Directory tree subdirectory display with lazy loading
@@ -93,6 +114,10 @@ assistant/
 - Consistent selection style between directory tree and file list
 - Custom About dialog with clickable GitHub link
 - Single-click selection for directory tree nodes
+
+### Dependencies
+- Added `mutagen>=1.47.0` for audio tag processing
+- Added `chardet>=5.0.0` for encoding detection
 
 ### Planned
 - System monitoring features

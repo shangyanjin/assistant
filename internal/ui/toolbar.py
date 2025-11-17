@@ -102,19 +102,28 @@ class Toolbar:
         separator2 = ttk.Separator(self.frame, orient=tk.VERTICAL)
         separator2.grid(row=0, column=5, padx=3, pady=2, sticky="ns")
         
+        # Audio Processor button (🎵)
+        self.buttons['audio'] = ttk.Button(
+            self.frame,
+            text="🎵",
+            **icon_style
+        )
+        self.buttons['audio'].grid(row=0, column=6, padx=1, pady=2, sticky="w")
+        create_tooltip(self.buttons['audio'], "Audio Processor")
+        
         # Refresh button (🔄)
         self.buttons['refresh'] = ttk.Button(
             self.frame,
             text="🔄",
             **icon_style
         )
-        self.buttons['refresh'].grid(row=0, column=6, padx=1, pady=2, sticky="w")
+        self.buttons['refresh'].grid(row=0, column=7, padx=1, pady=2, sticky="w")
         create_tooltip(self.buttons['refresh'], "Refresh Models")
         
         # Spacer to push buttons to left
         spacer = ttk.Frame(self.frame)
-        spacer.grid(row=0, column=7, sticky="ew")
-        self.frame.grid_columnconfigure(7, weight=1)
+        spacer.grid(row=0, column=8, sticky="ew")
+        self.frame.grid_columnconfigure(8, weight=1)
 
     def set_command(self, button_name: str, command):
         """

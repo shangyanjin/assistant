@@ -103,6 +103,9 @@ class App:
         # Models button - show model management
         self.toolbar.set_command('models', self._show_model_management)
         
+        # Audio Processor button - open audio processing window
+        self.toolbar.set_command('audio', self._show_audio_processor)
+        
         # Refresh button - refresh file manager
         self.toolbar.set_command('refresh', self._refresh_file_manager)
     
@@ -118,6 +121,12 @@ class App:
         """Refresh file manager"""
         if self.file_ui:
             self.file_ui.refresh()
+    
+    def _show_audio_processor(self):
+        """Show audio processor window"""
+        from internal.audio.ui import AudioProcessorWindow
+        current_path = self.file_service.get_current_path() if self.file_service else ""
+        window = AudioProcessorWindow(self.root, current_path)
 
     def _create_menu_bar(self):
         """Create menu bar"""
